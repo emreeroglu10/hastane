@@ -20,6 +20,10 @@
             margin: 0;
             padding: 20px;
             color: #333;
+            /* Mobilde seçim yapmayı engelle, sürüklemeyi kolaylaştır */
+            -webkit-touch-callout: none; 
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         h1, h2 {
@@ -37,43 +41,46 @@
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow-x: auto; /* Mobil için yatay kaydırma */
+            overflow-x: auto; 
             margin-bottom: 30px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px; /* Mobilde sıkışmayı önlemek için */
+            min-width: 600px; 
+            table-layout: fixed; /* Sütun genişliklerini sabitle */
         }
 
         th, td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            overflow-wrap: break-word;
         }
 
         th {
             background-color: var(--secondary-color);
             color: white;
             cursor: pointer;
-            user-select: none;
             position: sticky;
             top: 0;
+            z-index: 10;
         }
 
         th:hover {
             background-color: var(--primary-color);
         }
 
-        tr:hover {
-            background-color: #f1f1f1;
-        }
+        tr { background: #fff; }
+        tr:hover { background-color: #f9f9f9; }
 
         /* Sütun Genişlikleri */
-        .col-no { width: 40px; text-align: center; font-weight: bold; color: #7f8c8d; }
         .col-star { width: 40px; text-align: center; font-size: 1.5rem; cursor: pointer; }
-        .col-alim { font-weight: bold; color: #e74c3c; }
+        .col-no { width: 50px; text-align: center; font-weight: bold; color: #7f8c8d; }
+        .col-alim { font-weight: bold; color: #e74c3c; width: 100px; }
+        .col-yatak { width: 120px; }
         
         /* Yıldız İkonu */
         .star {
@@ -82,6 +89,22 @@
         }
         .star.active {
             color: var(--fav-color);
+        }
+
+        /* --- SÜRÜKLE BIRAK STİLLERİ (Favoriler İçin) --- */
+        
+        /* Sadece favoriler tablosundaki No sütunu tutulabilir olsun */
+        #tbody-favorites .col-no {
+            cursor: move; /* Mouse imleci */
+            background-color: #fff3cd; /* Hafif sarı, tutulabilir olduğunu belli et */
+            touch-action: none; /* Mobilde sayfa kaydırmayı engelle, satır kaysın */
+        }
+
+        /* Sürüklenen satırın stili */
+        tr.dragging {
+            background: #cce5ff !important;
+            opacity: 0.8;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         /* Favoriler Bölümü */
@@ -98,9 +121,14 @@
         /* Mobil Uyumluluk */
         @media screen and (max-width: 768px) {
             body { padding: 10px; }
-            th, td { padding: 8px 10px; font-size: 14px; }
+            th, td { padding: 8px 5px; font-size: 14px; }
             h1 { font-size: 20px; }
             h2 { font-size: 18px; }
+            
+            /* Mobilde tablo taşarsa kaydırma */
+            .table-wrapper {
+                -webkit-overflow-scrolling: touch;
+            }
         }
     </style>
 </head>
@@ -117,8 +145,8 @@
                     <th class="col-star">Fav</th>
                     <th class="col-no">No</th>
                     <th onclick="sortData('anadolu', 'name')">Hastane Adı &#8645;</th>
-                    <th onclick="sortData('anadolu', 'bedsRaw')">Yatak Sayısı &#8645;</th>
-                    <th onclick="sortData('anadolu', 'recruit')">Alım Sayısı &#8645;</th>
+                    <th class="col-yatak" onclick="sortData('anadolu', 'bedsRaw')">Yatak Sayısı &#8645;</th>
+                    <th class="col-alim" onclick="sortData('anadolu', 'recruit')">Alım Sayısı &#8645;</th>
                 </tr>
             </thead>
             <tbody id="tbody-anadolu"></tbody>
@@ -133,8 +161,8 @@
                     <th class="col-star">Fav</th>
                     <th class="col-no">No</th>
                     <th onclick="sortData('avrupa', 'name')">Hastane Adı &#8645;</th>
-                    <th onclick="sortData('avrupa', 'bedsRaw')">Yatak Sayısı &#8645;</th>
-                    <th onclick="sortData('avrupa', 'recruit')">Alım Sayısı &#8645;</th>
+                    <th class="col-yatak" onclick="sortData('avrupa', 'bedsRaw')">Yatak Sayısı &#8645;</th>
+                    <th class="col-alim" onclick="sortData('avrupa', 'recruit')">Alım Sayısı &#8645;</th>
                 </tr>
             </thead>
             <tbody id="tbody-avrupa"></tbody>
@@ -142,7 +170,7 @@
     </div>
 
     <div id="favorites-container" style="display:none;">
-        <h2 style="color: #f39c12;">Favorilerim &#9733;</h2>
+        <h2 style="color: #f39c12;">Favorilerim &#9733; (Sıralamak için No'dan Tutun)</h2>
         <div class="table-wrapper" id="favorites-section">
             <table id="table-favorites">
                 <thead>
@@ -150,8 +178,8 @@
                         <th class="col-star">Fav</th>
                         <th class="col-no">No</th>
                         <th>Hastane Adı</th>
-                        <th>Yatak Sayısı</th>
-                        <th>Alım Sayısı</th>
+                        <th class="col-yatak">Yatak Sayısı</th>
+                        <th class="col-alim">Alım Sayısı</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-favorites"></tbody>
@@ -222,31 +250,47 @@
     let favorites = JSON.parse(localStorage.getItem('hospitalFavorites')) || [];
     let sortState = { anadolu: {key: 'recruit', asc: false}, avrupa: {key: 'recruit', asc: false} };
 
-    // --- FONKSİYONLAR ---
+    // --- SÜRÜKLE BIRAK DEĞİŞKENLERİ ---
+    let dragSrcEl = null;
+    let touchStartY = 0;
+    let touchCurrentRow = null;
+
+    // --- TEMEL FONKSİYONLAR ---
 
     function saveFavorites() {
         localStorage.setItem('hospitalFavorites', JSON.stringify(favorites));
-        renderAll(); // Kaydettikten sonra tüm ekranı yenile
+        // Kaydettikten sonra render et ki sıra numaraları (1,2,3) düzelsin
+        renderAll();
+    }
+
+    // Drop işleminden sonra DOM'daki sıraya göre diziyi güncelle
+    function updateFavoritesFromDOM() {
+        const tbody = document.getElementById('tbody-favorites');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        const newOrder = [];
+        rows.forEach(row => {
+            const uid = row.getAttribute('data-uid');
+            // Mevcut verilerden bul
+            let item = favorites.find(f => f.uniqueId === uid);
+            if(item) newOrder.push(item);
+        });
+
+        favorites = newOrder;
+        saveFavorites();
     }
 
     function toggleFavorite(uniqueId) {
-        // Tüm veri kaynaklarında ara
         let item = anadoluData.find(x => x.uniqueId === uniqueId) || avrupaData.find(x => x.uniqueId === uniqueId);
         
-        // Eğer ana listelerde bulamazsak (nadiren olur) mevcut favorilerden bulmaya çalış
-        if (!item) {
-            item = favorites.find(x => x.uniqueId === uniqueId);
-        }
-
+        if (!item) item = favorites.find(x => x.uniqueId === uniqueId);
         if (!item) return;
 
         const index = favorites.findIndex(x => x.uniqueId === uniqueId);
         
         if (index > -1) {
-            // Zaten favoriyse çıkar
             favorites.splice(index, 1);
         } else {
-            // Değilse ekle
             favorites.push(item);
         }
         saveFavorites();
@@ -276,30 +320,143 @@
             return 0;
         });
 
-        renderAll(); // Sadece tabloyu değil, her şeyi render et ki sıra numaraları düzgün çıksın
+        renderAll();
     }
+
+    // --- DRAG & DROP HANDLERS (MOUSE & TOUCH) ---
+
+    function handleDragStart(e) {
+        // Sadece No sütunundan tutulursa çalışsın ama satırı taşısın
+        dragSrcEl = this.closest('tr');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', dragSrcEl.innerHTML);
+        dragSrcEl.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        
+        const dropTarget = e.target.closest('tr');
+        if (!dropTarget || dropTarget === dragSrcEl) return false;
+
+        const tbody = document.getElementById('tbody-favorites');
+        
+        // DOM'da yer değiştir
+        const rows = Array.from(tbody.children);
+        const srcIndex = rows.indexOf(dragSrcEl);
+        const targetIndex = rows.indexOf(dropTarget);
+
+        if (srcIndex < targetIndex) {
+            tbody.insertBefore(dragSrcEl, dropTarget.nextSibling);
+        } else {
+            tbody.insertBefore(dragSrcEl, dropTarget);
+        }
+
+        dragSrcEl.classList.remove('dragging');
+        
+        // Diziyi güncelle
+        updateFavoritesFromDOM();
+        return false;
+    }
+
+    function handleDragEnd() {
+        if (dragSrcEl) dragSrcEl.classList.remove('dragging');
+    }
+
+    // -- MOBİL TOUCH HANDLERS --
+
+    function handleTouchStart(e) {
+        touchCurrentRow = this.closest('tr');
+        touchStartY = e.touches[0].clientY;
+        touchCurrentRow.classList.add('dragging');
+        // e.preventDefault(); // Sayfanın kaymasını engellemek için CSS touch-action kullandık
+    }
+
+    function handleTouchMove(e) {
+        if (!touchCurrentRow) return;
+        
+        const touchY = e.touches[0].clientY;
+        const tbody = document.getElementById('tbody-favorites');
+        const rows = Array.from(tbody.children);
+        
+        // Hangi satırın üzerindeyiz?
+        rows.forEach(row => {
+            if (row === touchCurrentRow) return;
+            const rect = row.getBoundingClientRect();
+            if (touchY > rect.top && touchY < rect.bottom) {
+                if (touchY < rect.top + rect.height / 2) {
+                    tbody.insertBefore(touchCurrentRow, row);
+                } else {
+                    tbody.insertBefore(touchCurrentRow, row.nextSibling);
+                }
+            }
+        });
+        e.preventDefault(); // Sürüklerken ekran kaymasın
+    }
+
+    function handleTouchEnd() {
+        if (touchCurrentRow) {
+            touchCurrentRow.classList.remove('dragging');
+            touchCurrentRow = null;
+            updateFavoritesFromDOM(); // Bırakınca kaydet
+        }
+    }
+
+    function addDnDHandlers(cell) {
+        // Mouse Events
+        cell.addEventListener('dragstart', handleDragStart);
+        cell.addEventListener('dragend', handleDragEnd);
+        
+        // Touch Events
+        cell.addEventListener('touchstart', handleTouchStart, {passive: false});
+        cell.addEventListener('touchmove', handleTouchMove, {passive: false});
+        cell.addEventListener('touchend', handleTouchEnd);
+    }
+
+
+    // --- RENDER ---
 
     function renderTable(tbodyId, data, isFavoriteTable = false) {
         const tbody = document.getElementById(tbodyId);
         tbody.innerHTML = "";
 
+        // Eğer favori tablosuysa drop listener ekle
+        if (isFavoriteTable) {
+            tbody.addEventListener('dragover', handleDragOver);
+            tbody.addEventListener('drop', handleDrop);
+        }
+
         data.forEach((row, index) => {
             const isFav = favorites.some(f => f.uniqueId === row.uniqueId);
             const tr = document.createElement('tr');
-            
-            // Sıra No mantığı: index + 1 (Listedeki sırası neyse o)
-            const rowNumber = index + 1;
+            tr.setAttribute('data-uid', row.uniqueId); // Sıralama için ID sakla
 
+            // Favori tablosunda No sütunu sürüklenebilir
+            const noCellAttr = isFavoriteTable ? 'draggable="true"' : '';
+            
             tr.innerHTML = `
                 <td class="col-star" onclick="toggleFavorite('${row.uniqueId}')">
                     <span class="star ${isFav ? 'active' : ''}">&#9733;</span>
                 </td>
-                <td class="col-no">${rowNumber}</td>
+                <td class="col-no" ${noCellAttr}>${index + 1}</td>
                 <td>${row.name}</td>
                 <td>${row.beds}</td>
                 <td class="col-alim">${row.recruit}</td>
             `;
+            
             tbody.appendChild(tr);
+
+            // Eğer favori tablosuysa No hücresine eventleri ekle
+            if (isFavoriteTable) {
+                const noCell = tr.querySelector('.col-no');
+                addDnDHandlers(noCell);
+            }
         });
     }
 
@@ -307,7 +464,6 @@
         renderTable('tbody-anadolu', anadoluData);
         renderTable('tbody-avrupa', avrupaData);
         
-        // Favoriler tablosunu kontrol et ve çiz
         const favContainer = document.getElementById('favorites-container');
         if (favorites.length === 0) {
             favContainer.style.display = 'none';
@@ -318,7 +474,7 @@
     }
 
     // --- BAŞLANGIÇ ---
-    // Sayfa açılışında alım sayısına göre sıralı gelsin
+    // İlk açılışta sırala
     anadoluData.sort((a, b) => b.recruit - a.recruit);
     avrupaData.sort((a, b) => b.recruit - a.recruit);
     
